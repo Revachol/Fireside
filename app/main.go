@@ -45,7 +45,7 @@ func booksHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		book.ID = generateID()
-		books = append(books, book)
+		AddBook(&books, book)
 		json.NewEncoder(w).Encode(book)
 	} else {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)

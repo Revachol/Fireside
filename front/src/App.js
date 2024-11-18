@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import './App.css';
 
 function App() {
   const [books, setBooks] = useState([]);
@@ -36,14 +37,15 @@ function App() {
   };
 
   return (
-    <div style={{ textAlign: 'center', padding: '20px' }}>
+    <div style={{padding: '20px' }}>
       <h1>Book Manager</h1>
-      <p>Welcome to your personal book collection manager.</p>
+      <p class="help">Welcome to your personal book collection manager.</p>
       <h2>Book List</h2>
       <ul>
         {books.map((book) => (
           <li key={book.id}>
             {book.title} by {book.author}
+            <button type="delete">Delete Book</button>
           </li>
         ))}
       </ul>
