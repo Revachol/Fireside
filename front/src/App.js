@@ -3,7 +3,7 @@ import './App.css';
 
 function App() {
   const [books, setBooks] = useState([]);
-  const [newBook, setNewBook] = useState({ title: '', author: '' });
+  const [newBook, setNewBook] = useState({ title: '', author: '', year: 0 });
 
   useEffect(() => {
     fetch("http://localhost:8080/books")
@@ -12,7 +12,6 @@ function App() {
       .catch((error) => console.error("Error fetching books:", error));
   }, []);
 
-  // Функция для отправки новой книги на сервер
   const addBook = async (e) => {
     e.preventDefault();
     try {
@@ -26,8 +25,8 @@ function App() {
 
       if (response.ok) {
         const addedBook = await response.json();
-        setBooks([...books, addedBook]); // Обновляем список книг
-        setNewBook({ title: '', author: '' }); // Очищаем форму
+        setBooks([...books, addedBook]);
+        setNewBook({ title: '', author: '', year: 0 });
       } else {
         console.error("Failed to add book");
       }
@@ -36,37 +35,68 @@ function App() {
     }
   };
 
+  const deleteBook = (id) => {
+    fetch("http://localhost:8080/books", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: id })
+    })
+      .then((response) => {
+        if (response.ok) {
+          setBooks(books.filter((book) => book.id !== id));
+        } else {
+          console.error("Error deleting book");
+        }
+      })
+      .catch((error) => console.error("Error:", error));
+  };
+
   return (
-    <div style={{padding: '20px' }}>
-      <h1>Book Manager</h1>
-      <p class="help">Welcome to your personal book collection manager.</p>
+    <div className="container">
+      <div className="header">
+        <h1>Book Manager</h1>
+        <p>Welcome to your personal book collection manager.</p>
+      </div>
+
       <h2>Book List</h2>
-      <ul>
+      <ul className="book-list">
         {books.map((book) => (
-          <li key={book.id}>
-            {book.title} by {book.author}
-            <button type="delete">Delete Book</button>
+          <li key={book.id} className="book-item">
+            <span className="book-title">{book.title}</span> by {book.author}, {book.year}
+            <button onClick={() => deleteBook(book.id)} className="delete-button">Delete</button>
           </li>
         ))}
       </ul>
 
-      {/* Форма добавления новой книги */}
       <h2>Add a New Book</h2>
       <form onSubmit={addBook} style={{ marginBottom: '20px' }}>
-        <input
-          type="text"
-          placeholder="Title"
-          value={newBook.title}
-          onChange={(e) => setNewBook({ ...newBook, title: e.target.value })}
-          required
-        />
-        <input
-          type="text"
-          placeholder="Author"
-          value={newBook.author}
-          onChange={(e) => setNewBook({ ...newBook, author: e.target.value })}
-          required
-        />
+        <div className="form-group">
+          <input
+            type="text"
+            placeholder="Title"
+            value={newBook.title}
+            onChange={(e) => setNewBook({ ...newBook, title: e.target.value })}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <input
+            type="text"
+            placeholder="Author"
+            value={newBook.author}
+            onChange={(e) => setNewBook({ ...newBook, author: e.target.value })}
+            required
+          />
+        </div>
+        <div className="form-group">
+          <input
+            type="text"
+            placeholder="Year"
+            value={newBook.year}
+            onChange={(e) => setNewBook({ ...newBook, year: parseInt(e.target.value) || 0 })}
+            required
+          />
+        </div>
         <button type="submit">Add Book</button>
       </form>
     </div>
