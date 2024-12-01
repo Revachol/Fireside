@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import './App.css';
+import { Container, Typography, List, ListItem, Button, TextField, ListItemText, Box} from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+
 
 function App() {
   const [books, setBooks] = useState([]);
@@ -51,55 +53,82 @@ function App() {
       .catch((error) => console.error("Error:", error));
   };
 
+  const fetchBooks = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/books");
+      if (response.ok) {
+        const data = await response.json();
+        setBooks(data);
+      } else {
+        console.error("Failed to fetch books");
+      }
+    } catch (error) {
+      console.error("Error fetching books:", error);
+    }
+  };
+
+  // Функция для запроса сортированных книг
+  const fetchSortedBooks = async (sortBy) => {
+    try {
+      const response = await fetch(`http://localhost:8080/sortedBooks?sort=${sortBy}`);
+      if (response.ok) {
+        const sortedData = await response.json();
+        setBooks(sortedData);
+      } else {
+        console.error("Failed to fetch sorted books");
+      }
+    } catch (error) {
+      console.error("Error fetching sorted books:", error);
+    }
+  };
+
   return (
-    <div className="container">
-      <div className="header">
-        <h1>Book Manager</h1>
-        <p>Welcome to your personal book collection manager.</p>
-      </div>
+    <Container maxWidth="sm" style={{ marginTop: '20px' }}>
+      <Typography variant="h4" align="center">Book Manager</Typography>
+      <Typography variant="body1" align="center">Welcome to your personal book collection manager.</Typography>
 
-      <h2>Book List</h2>
-      <ul className="book-list">
+      <Box display="flex" justifyContent="center" my={2}>
+        <Button variant="contained" color="primary" onClick={() => fetchSortedBooks('title')}>Sort by Title</Button>
+        <Button variant="contained" color="primary" onClick={() => fetchSortedBooks('author')} style={{ marginLeft: '10px' }}>Sort by Author</Button>
+        <Button variant="contained" color="primary" onClick={() => fetchSortedBooks('year')} style={{ marginLeft: '10px' }}>Sort by Year</Button>
+      </Box>
+
+      <List>
         {books.map((book) => (
-          <li key={book.id} className="book-item">
-            <span className="book-title">{book.title}</span> by {book.author}, {book.year}
-            <button onClick={() => deleteBook(book.id)} className="delete-button">Delete</button>
-          </li>
+          <ListItem key={book.id} secondaryAction={
+            <Button onClick={() => deleteBook(book.id)} color="secondary" startIcon={<DeleteIcon />}>
+              Delete
+            </Button>
+          }>
+            <ListItemText primary={`${book.title} by ${book.author}`} secondary={`Year: ${book.year}`} />
+          </ListItem>
         ))}
-      </ul>
+      </List>
 
-      <h2>Add a New Book</h2>
-      <form onSubmit={addBook} style={{ marginBottom: '20px' }}>
-        <div className="form-group">
-          <input
-            type="text"
-            placeholder="Title"
-            value={newBook.title}
-            onChange={(e) => setNewBook({ ...newBook, title: e.target.value })}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <input
-            type="text"
-            placeholder="Author"
-            value={newBook.author}
-            onChange={(e) => setNewBook({ ...newBook, author: e.target.value })}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <input
-            type="text"
-            placeholder="Year"
-            value={newBook.year}
-            onChange={(e) => setNewBook({ ...newBook, year: parseInt(e.target.value) || 0 })}
-            required
-          />
-        </div>
-        <button type="submit">Add Book</button>
+      <Typography variant="h6">Add a New Book</Typography>
+      <form onSubmit={addBook} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <TextField
+          label="Title"
+          value={newBook.title}
+          onChange={(e) => setNewBook({ ...newBook, title: e.target.value })}
+          required
+        />
+        <TextField
+          label="Author"
+          value={newBook.author}
+          onChange={(e) => setNewBook({ ...newBook, author: e.target.value })}
+          required
+        />
+        <TextField
+          label="Year"
+          type="number"
+          value={newBook.year}
+          onChange={(e) => setNewBook({ ...newBook, year: parseInt(e.target.value) || 0 })}
+          required
+        />
+        <Button type="submit" variant="contained" color="primary">Add Book</Button>
       </form>
-    </div>
+    </Container>
   );
 }
 

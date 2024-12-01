@@ -84,20 +84,18 @@ func findBooksByYear(books []Book, year int) []Book {
 // 	}
 // }
 
-// func SortByYear(books []Book, desc bool) []Book {
-// 	var Sorted []Book = books
-// 	for i := 0; i < len(Sorted)-1; i++ {
-// 		for j := i + 1; j < len(Sorted); j++ {
-// 			if desc {
-// 				if Sorted[i].Year < Sorted[j].Year {
-// 					Sorted[i], Sorted[j] = Sorted[j], Sorted[i]
-// 				}
-// 			} else {
-// 				if Sorted[i].Year > Sorted[j].Year {
-// 					Sorted[i], Sorted[j] = Sorted[j], Sorted[i]
-// 				}
-// 			}
-// 		}
-// 	}
-// 	return Sorted
-// }
+func SortByYear(books *[]Book, desc bool) {
+	for i := 0; i < len(*books)-1; i++ {
+		for j := i + 1; j < len(*books); j++ {
+			if desc {
+				if (*books)[i].Year < (*books)[j].Year {
+					(*books)[i], (*books)[j] = (*books)[j], (*books)[i]
+				}
+			} else {
+				if (*books)[i].Year > (*books)[j].Year {
+					(*books)[i], (*books)[j] = (*books)[j], (*books)[i]
+				}
+			}
+		}
+	}
+}

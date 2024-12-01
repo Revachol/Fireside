@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"sort"
 )
 
 var books = []Book{
@@ -25,7 +26,7 @@ func booksHandler(w http.ResponseWriter, r *http.Request) {
 	// Устанавливаем заголовки CORS
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, DELETE, SORT, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
 
 	if r.Method == "OPTIONS" {
@@ -34,11 +35,10 @@ func booksHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if r.Method == "GET" {
-		// Возвращаем список всех книг
+	switch r.Method {
+	case "GET":
 		json.NewEncoder(w).Encode(books)
-	} else if r.Method == "POST" {
-		// Обрабатываем добавление новой книги
+	case "POST":
 		var book Book
 		if err := json.NewDecoder(r.Body).Decode(&book); err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
@@ -47,12 +47,61 @@ func booksHandler(w http.ResponseWriter, r *http.Request) {
 		book.ID = generateID()
 		AddBook(&books, book)
 		json.NewEncoder(w).Encode(book)
-	} else {
+	case "DELETE":
+		// Получаем ID книги из запроса
+		var book Book
+		if err := json.NewDecoder(r.Body).Decode(&book); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		RemoveBook(&books, book.ID)
+		w.WriteHeader(http.StatusOK)
+
+		http.Error(w, "Book not found", http.StatusNotFound)
+	case "SORT":
+		SortByYear(&books, true)
+
+		w.WriteHeader(http.StatusOK)
+
+		http.Error(w, "Book not found", http.StatusNotFound)
+	default:
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
 
+func getSortedBooks(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	// Получение параметра сортировки из URL
+	sortParam := r.URL.Query().Get("sort")
+
+	// Копируем массив books для сортировки
+	sortedBooks := make([]Book, len(books))
+	copy(sortedBooks, books)
+
+	// Сортируем книги в зависимости от параметра
+	switch sortParam {
+	case "title":
+		sort.Slice(sortedBooks, func(i, j int) bool {
+			return sortedBooks[i].Title < sortedBooks[j].Title
+		})
+	case "author":
+		sort.Slice(sortedBooks, func(i, j int) bool {
+			return sortedBooks[i].Author < sortedBooks[j].Author
+		})
+	case "year":
+		sort.Slice(sortedBooks, func(i, j int) bool {
+			return sortedBooks[i].Year < sortedBooks[j].Year
+		})
+	}
+
+	json.NewEncoder(w).Encode(sortedBooks)
+}
+
 func main() {
 	http.HandleFunc("/books", booksHandler)
+	http.HandleFunc("/sortedBooks", getSortedBooks)
+
 	http.ListenAndServe(":8080", nil)
 }
