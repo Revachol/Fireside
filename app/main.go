@@ -1,10 +1,31 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
+	"fmt"
+	_ "github.com/lib/pq"
+	"log"
 	"net/http"
 	"sort"
 )
+
+var db *sql.DB
+
+func initDB() {
+	var err error
+	connStr := "user=admin password=root dbname=Fireside sslmode=disable"
+	db, err = sql.Open("postgres", connStr)
+	if err != nil {
+		log.Fatalf("Failed to connect to database: %v", err)
+	}
+
+	err = db.Ping()
+	if err != nil {
+		log.Fatalf("Failed to ping database: %v", err)
+	}
+	fmt.Println("Connected to PostgreSQL")
+}
 
 var books = []Book{
 	NewBook(1, "The Go Programming Language", "Alan A. A. Donovan", 2015),
@@ -100,6 +121,7 @@ func getSortedBooks(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	initDB()
 	http.HandleFunc("/books", booksHandler)
 	http.HandleFunc("/sortedBooks", getSortedBooks)
 
